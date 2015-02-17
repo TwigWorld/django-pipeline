@@ -41,6 +41,11 @@ class CompressedMixin(object):
             templates = packager.pack_templates(package)
             return method(package, paths, templates=templates)
 
+    def gzip_allowed(self, http_accepts):
+        print http_accepts
+        return 'gzip' in http_accepts and\
+            settings.PIPELINE_ENABLED and getattr(settings, 'AWS_IS_GZIPPED', False)
+
 
 class CompressedCSSNode(CompressedMixin, template.Node):
     def __init__(self, name):
@@ -50,6 +55,8 @@ class CompressedCSSNode(CompressedMixin, template.Node):
         package_name = template.Variable(self.name).resolve(context)
         try:
             package = self.package_for(package_name, 'css')
+            if self.gzip_allowed(getattr(context['request'].META,'HTTP_ACCEPT_ENCODING', '')):
+                package.config['output_filename'] += '.gz'
         except PackageNotFound:
             return ''  # fail silently, do not return anything if an invalid group is specified
         return self.render_compressed(package, 'css')
@@ -76,6 +83,8 @@ class CompressedJSNode(CompressedMixin, template.Node):
         package_name = template.Variable(self.name).resolve(context)
         try:
             package = self.package_for(package_name, 'js')
+            if self.gzip_allowed(getattr(context['request'].META,'HTTP_ACCEPT_ENCODING', '')):
+                package.config['output_filename'] += '.gz'
         except PackageNotFound:
             return ''  # fail silently, do not return anything if an invalid group is specified
         return self.render_compressed(package, 'js')
