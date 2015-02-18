@@ -43,7 +43,7 @@ class CompressedMixin(object):
 
     def gzip_allowed(self, http_accepts):
         return 'gzip' in http_accepts and\
-            settings.PIPELINE_ENABLED and getattr(settings, 'PIPELINE_IS_GZIPPED', False)
+            settings.PIPELINE_ENABLED and getattr(settings, 'AWS_IS_GZIPPED', False)
 
 
 class CompressedCSSNode(CompressedMixin, template.Node):
