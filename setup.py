@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='django-pipeline',
-    version='1.3.27-mod-gzip-template-tag',
+    version='1.3.27-mod-gzipped-template-tag',
     description='Pipeline is an asset packaging library for Django.',
     long_description=io.open('README.rst', encoding='utf-8').read() + '\n\n' +
         io.open('HISTORY.rst', encoding='utf-8').read(),
