@@ -24,7 +24,7 @@ class JinjaTest(TestCase):
 
     def test_package_css(self):
         template = self.env.from_string(u"""{% compressed_css "screen" %}""")
-        self.assertEqual(u'<link href="/static/screen.css.gz" rel="stylesheet" type="text/css" />', template.render())
+        self.assertEqual(u'<link href="/static/screen.css" rel="stylesheet" type="text/css" />', template.render())
 
     def test_package_css_disabled(self):
         with pipeline_settings(PIPELINE_ENABLED=False):
@@ -35,7 +35,7 @@ class JinjaTest(TestCase):
 
     def test_package_js(self):
         template = self.env.from_string(u"""{% compressed_js "scripts" %}""")
-        self.assertEqual(u'<script type="text/javascript" src="/static/scripts.js.gz" charset="utf-8"></script>', template.render())
+        self.assertEqual(u'<script type="text/javascript" src="/static/scripts.js" charset="utf-8"></script>', template.render())
 
     def test_package_js_async(self):
         template = self.env.from_string(u"""{% compressed_js "scripts_async" %}""")
@@ -74,8 +74,8 @@ class DjangoTest(TestCase):
         self.assertEqual(u'<script type="text/javascript" src="/static/scripts.js" charset="utf-8"></script>', rendered)
 
     def test_compressed_js_with_gzip(self):
-        rendered = self.render_template_with_gzip(u"""{% load compressed %}{% compressed_js "scripts" %}""")
-        self.assertEqual(u'<script type="text/javascript" src="/static/scripts.js.gz" charset="utf-8"></script>', rendered)
+        rendered = self.render_template_with_gzip(u"""{% load compressed %}{% compressed_js "scripts" %}{% load compressed %}{% compressed_js "scripts" %}""")
+        self.assertEqual(u'<script type="text/javascript" src="/static/scripts.js.gz" charset="utf-8"></script><script type="text/javascript" src="/static/scripts.js.gz" charset="utf-8"></script>', rendered)
 
 
     def test_compressed_js_async(self):
