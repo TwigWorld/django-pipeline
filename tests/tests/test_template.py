@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from jinja2 import Environment, PackageLoader
 
 from django.template import Template, Context
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
 
 from pipeline.jinja2.ext import PipelineExtension
 
@@ -24,7 +24,7 @@ class JinjaTest(TestCase):
 
     def test_package_css(self):
         template = self.env.from_string(u"""{% compressed_css "screen" %}""")
-        self.assertEqual(u'<link href="/static/screen.css" rel="stylesheet" type="text/css" />', template.render())
+        self.assertEqual(u'<link href="/static/screen.css.gz" rel="stylesheet" type="text/css" />', template.render())
 
     def test_package_css_disabled(self):
         with pipeline_settings(PIPELINE_ENABLED=False):
@@ -35,7 +35,7 @@ class JinjaTest(TestCase):
 
     def test_package_js(self):
         template = self.env.from_string(u"""{% compressed_js "scripts" %}""")
-        self.assertEqual(u'<script type="text/javascript" src="/static/scripts.js" charset="utf-8"></script>', template.render())
+        self.assertEqual(u'<script type="text/javascript" src="/static/scripts.js.gz" charset="utf-8"></script>', template.render())
 
     def test_package_js_async(self):
         template = self.env.from_string(u"""{% compressed_js "scripts_async" %}""")
@@ -52,7 +52,10 @@ class JinjaTest(TestCase):
 
 class DjangoTest(TestCase):
     def render_template(self, template):
-        return Template(template).render(Context())
+        return Template(template).render(Context({'request': RequestFactory().get('/', HTTP_ACCEPT_ENCODING='')}))
+
+    def render_template_with_gzip(self, template):
+        return Template(template).render(Context({'request': RequestFactory().get('/', HTTP_ACCEPT_ENCODING='gzip')}))
 
     def test_compressed_empty(self):
         rendered = self.render_template(u"""{% load compressed %}{% compressed_css "unknow" %}""")
@@ -62,9 +65,18 @@ class DjangoTest(TestCase):
         rendered = self.render_template(u"""{% load compressed %}{% compressed_css "screen" %}""")
         self.assertEqual(u'<link href="/static/screen.css" rel="stylesheet" type="text/css" />', rendered)
 
+    def test_compressed_css_with_gzip(self):
+        rendered = self.render_template_with_gzip(u"""{% load compressed %}{% compressed_css "screen" %}""")
+        self.assertEqual(u'<link href="/static/screen.css.gz" rel="stylesheet" type="text/css" />', rendered)
+
     def test_compressed_js(self):
         rendered = self.render_template(u"""{% load compressed %}{% compressed_js "scripts" %}""")
         self.assertEqual(u'<script type="text/javascript" src="/static/scripts.js" charset="utf-8"></script>', rendered)
+
+    def test_compressed_js_with_gzip(self):
+        rendered = self.render_template_with_gzip(u"""{% load compressed %}{% compressed_js "scripts" %}""")
+        self.assertEqual(u'<script type="text/javascript" src="/static/scripts.js.gz" charset="utf-8"></script>', rendered)
+
 
     def test_compressed_js_async(self):
         rendered = self.render_template(u"""{% load compressed %}{% compressed_js "scripts_async" %}""")

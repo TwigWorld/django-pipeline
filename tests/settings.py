@@ -28,6 +28,8 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'tests.urls'
 
+AWS_IS_GZIPPED = True
+
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = local_path('media')
