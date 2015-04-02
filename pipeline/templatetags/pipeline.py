@@ -20,14 +20,16 @@ class PipelineMixin(object):
         package = {
             'js': getattr(settings, 'PIPELINE_JS', {}).get(package_name, {}),
             'css': getattr(settings, 'PIPELINE_CSS', {}).get(package_name, {}),
+            'html': getattr(settings, 'PIPELINE_HTML', {}).get(package_name, {})
         }[package_type]
 
         if package:
             package = {package_name: package}
 
         packager = {
-            'js': Packager(css_packages={}, js_packages=package),
-            'css': Packager(css_packages=package, js_packages={}),
+            'js': Packager(css_packages={}, js_packages=package, html_packages={}),
+            'css': Packager(css_packages=package, js_packages={}, html_packages={}),
+            'html': Packager(css_packages={}, js_packages={}, html_packages=package),
         }[package_type]
 
         return packager.package_for(package_type, package_name)

@@ -61,7 +61,7 @@ class Package(object):
 
 
 class Packager(object):
-    def __init__(self, storage=None, verbose=False, css_packages=None, js_packages=None):
+    def __init__(self, storage=None, verbose=False, css_packages=None, js_packages=None, html_packages=None):
         if storage is None:
             storage = staticfiles_storage
         self.storage = storage
@@ -72,9 +72,13 @@ class Packager(object):
             css_packages = settings.PIPELINE_CSS
         if js_packages is None:
             js_packages = settings.PIPELINE_JS
+        if html_packages is None:
+            js_packages = settings.PIPELINE_HTML
+
         self.packages = {
             'css': self.create_packages(css_packages),
             'js': self.create_packages(js_packages),
+            'html': self.create_packages(html_packages)
         }
 
     def package_for(self, kind, package_name):

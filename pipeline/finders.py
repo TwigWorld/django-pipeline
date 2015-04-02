@@ -28,7 +28,10 @@ class ManifestFinder(BaseFinder):
         Looks for files in PIPELINE_CSS and PIPELINE_JS
         """
         matches = []
-        for elem in chain(settings.PIPELINE_CSS.values(), settings.PIPELINE_JS.values()):
+        for elem in chain(settings.PIPELINE_CSS.values(),
+                          settings.PIPELINE_JS.values(),
+                          settings.PIPELINE_HTML.values()
+        ):
             if elem['output_filename'] == path:
                 match = safe_join(settings.PIPELINE_ROOT, path)
                 if not all:

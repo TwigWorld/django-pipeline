@@ -17,6 +17,7 @@ DEFAULTS = {
 
     'PIPELINE_CSS': {},
     'PIPELINE_JS': {},
+    'PIPELINE_HTML': {},
 
     'PIPELINE_TEMPLATE_NAMESPACE': "window.JST",
     'PIPELINE_TEMPLATE_EXT': ".jst",
