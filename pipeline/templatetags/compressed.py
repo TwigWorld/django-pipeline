@@ -14,14 +14,27 @@ register = template.Library()
 
 
 class CompressedMixin(object):
-    def package_for(self, package_name, package_type):
+
+    def get_package_or_none(self, package_name, package_type):
         package = {
             'js': getattr(settings, 'PIPELINE_JS', {}).get(package_name, {}),
             'css': getattr(settings, 'PIPELINE_CSS', {}).get(package_name, {}),
         }[package_type]
 
         if package:
-            package = {package_name: package}
+            return {package_name: package}
+
+    def _compressed_override_name(self, name):
+       return '{prefix}_{name}'.format(
+           prefix=getattr(settings, 'PIPELINE_SETTINGS_PREFIX',''),
+           name=name
+       )
+
+    def package_for(self, package_name, package_type):
+        package = self.get_package_or_none(self._compressed_override_name(package_name), package_type)
+
+        if not package:
+            package = self.get_package_or_none(package_name, package_type)
 
         packager = {
             'js': Packager(css_packages={}, js_packages=package),
