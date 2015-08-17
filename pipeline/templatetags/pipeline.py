@@ -45,15 +45,21 @@ class PipelineMixin(object):
             templates = packager.pack_templates(package)
             return method(package, paths, templates=templates)
 
+    def gzip_allowed(self, http_accepts):
+        return 'gzip' in http_accepts and\
+            settings.PIPELINE_ENABLED and getattr(settings, 'AWS_IS_GZIPPED', False)
+
 
 class StylesheetNode(PipelineMixin, template.Node):
     def __init__(self, name):
         self.name = name
+        self.gzip=False
 
     def render(self, context):
         package_name = template.Variable(self.name).resolve(context)
         try:
             package = self.package_for(package_name, 'css')
+            self.gzip = self.gzip_allowed(context['request'].META.get('HTTP_ACCEPT_ENCODING', ''))
         except PackageNotFound:
             return ''  # fail silently, do not return anything if an invalid group is specified
         return self.render_compressed(package, 'css')
@@ -61,10 +67,16 @@ class StylesheetNode(PipelineMixin, template.Node):
     def render_css(self, package, path):
         template_name = package.template_name or "pipeline/css.html"
         context = package.extra_context
+        url = mark_safe(staticfiles_storage.url(path))
+
+        if self.gzip == True:
+            url += '.gz'
+
         context.update({
             'type': guess_type(path, 'text/css'),
-            'url': mark_safe(staticfiles_storage.url(path))
+            'url': url
         })
+
         return render_to_string(template_name, context)
 
     def render_individual_css(self, package, paths, **kwargs):
@@ -75,6 +87,7 @@ class StylesheetNode(PipelineMixin, template.Node):
 class JavascriptNode(PipelineMixin, template.Node):
     def __init__(self, name):
         self.name = name
+        self.gzip=False
 
     def render(self, context):
         package_name = template.Variable(self.name).resolve(context)
@@ -87,9 +100,13 @@ class JavascriptNode(PipelineMixin, template.Node):
     def render_js(self, package, path):
         template_name = package.template_name or "pipeline/js.html"
         context = package.extra_context
+        url = mark_safe(staticfiles_storage.url(path))
+
+        if self.gzip == True:
+            url += '.gz'
         context.update({
-            'type': guess_type(path, 'text/javascript'),
-            'url': mark_safe(staticfiles_storage.url(path))
+            'type': guess_type(path, 'text/css'),
+            'url': url
         })
         return render_to_string(template_name, context)
 

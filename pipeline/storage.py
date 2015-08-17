@@ -52,12 +52,7 @@ class GZIPMixin(object):
     gzip_patterns = ("*.css", "*.js")
 
     def _compress(self, original_file):
-        content = BytesIO()
-        gzip_file = gzip.GzipFile(mode='wb', fileobj=content)
-        gzip_file.write(original_file.read())
-        gzip_file.close()
-        content.seek(0)
-        return File(content)
+        return original_file
 
     def post_process(self, paths, dry_run=False, **options):
         super_class = super(GZIPMixin, self)

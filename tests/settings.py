@@ -35,6 +35,8 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware'
 )
 
+AWS_IS_GZIPPED = True
+
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = local_path('media')
