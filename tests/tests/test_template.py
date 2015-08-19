@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from jinja2 import Environment, PackageLoader
 
 from django.template import Template, Context
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
 
 from pipeline.jinja2.ext import PipelineExtension
 
@@ -84,9 +84,17 @@ class DjangoTest(TestCase):
         self.assertEqual(u'<script async defer type="text/javascript" src="/static/scripts_async_defer.js" charset="utf-8"></script>', rendered)
 
     def test_compressed_css_with_gzip(self):
-        rendered = self.render_template_with_gzip(u"""{% load compressed %}{% compressed_css "screen" %}""")
+        rendered = self.render_template_with_gzip(u"""{% load pipeline %}{% stylesheet "screen" %}""")
         self.assertEqual(u'<link href="/static/screen.css.gz" rel="stylesheet" type="text/css" />', rendered)
 
     def test_compressed_js_with_gzip(self):
-        rendered = self.render_template_with_gzip(u"""{% load compressed %}{% compressed_js "scripts" %}{% load compressed %}{% compressed_js "scripts" %}""")
+        rendered = self.render_template_with_gzip(u"""{% load pipeline %}{% javascript "scripts" %}{% load pipeline %}{% javascript "scripts" %}""")
         self.assertEqual(u'<script type="text/javascript" src="/static/scripts.js.gz" charset="utf-8"></script><script type="text/javascript" src="/static/scripts.js.gz" charset="utf-8"></script>', rendered)
+
+    def test_override_compressed(self):
+        from django.conf import settings
+        settings.PIPELINE_SETTINGS_PREFIX = 'override'
+
+        rendered = self.render_template(u"""{% load pipeline %}{% stylesheet "screen" %}""")
+        self.assertEqual(u'<link href="/static/screen.css" rel="stylesheet" type="text/css" />', rendered)
+        del(settings.PIPELINE_SETTINGS_PREFIX)

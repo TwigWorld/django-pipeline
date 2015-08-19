@@ -67,6 +67,14 @@ PIPELINE_CSS = {
             'pipeline/css/urls.css'
         ),
         'output_filename': 'screen.css'
+    },
+    'override_screen': {
+        'source_filenames': (
+            'pipeline/css/first.css',
+            'pipeline/css/second.css',
+            'pipeline/css/urls.css'
+        ),
+        'output_filename': 'screen.css'
     }
 }
 PIPELINE_JS = {

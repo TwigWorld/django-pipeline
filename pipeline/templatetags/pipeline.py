@@ -16,21 +16,36 @@ register = template.Library()
 
 
 class PipelineMixin(object):
-    def package_for(self, package_name, package_type):
+
+    def get_package_or_none(self, package_name, package_type):
         package = {
             'js': getattr(settings, 'PIPELINE_JS', {}).get(package_name, {}),
             'css': getattr(settings, 'PIPELINE_CSS', {}).get(package_name, {}),
         }[package_type]
 
         if package:
-            package = {package_name: package}
+            return {package_name: package}
+
+    def _compressed_override_name(self, name):
+       return '{prefix}_{name}'.format(
+           prefix=getattr(settings, 'PIPELINE_SETTINGS_PREFIX',''),
+           name=name
+       )
+
+    def package_for(self, package_name, package_type):
+        override_package = self._compressed_override_name(package_name)
+        package = self.get_package_or_none(override_package, package_type)
+
+        if not package:
+            package = self.get_package_or_none(package_name, package_type)
+            override_package = package_name
 
         packager = {
             'js': Packager(css_packages={}, js_packages=package),
             'css': Packager(css_packages=package, js_packages={}),
         }[package_type]
 
-        return packager.package_for(package_type, package_name)
+        return packager.package_for(package_type, override_package)
 
     def render_compressed(self, package, package_type):
         if settings.PIPELINE_ENABLED:
@@ -93,6 +108,7 @@ class JavascriptNode(PipelineMixin, template.Node):
         package_name = template.Variable(self.name).resolve(context)
         try:
             package = self.package_for(package_name, 'js')
+            self.gzip = self.gzip_allowed(context['request'].META.get('HTTP_ACCEPT_ENCODING', ''))
         except PackageNotFound:
             return ''  # fail silently, do not return anything if an invalid group is specified
         return self.render_compressed(package, 'js')
