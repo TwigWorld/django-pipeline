@@ -35,6 +35,8 @@ class CompressedMixin(object):
 
         if not package:
             package = self.get_package_or_none(package_name, package_type)
+        else:
+            package_name = self._compressed_override_name(package_name)
 
         packager = {
             'js': Packager(css_packages={}, js_packages=package),
