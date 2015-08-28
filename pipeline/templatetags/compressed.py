@@ -14,14 +14,29 @@ register = template.Library()
 
 
 class CompressedMixin(object):
-    def package_for(self, package_name, package_type):
+
+    def get_package_or_none(self, package_name, package_type):
         package = {
             'js': getattr(settings, 'PIPELINE_JS', {}).get(package_name, {}),
             'css': getattr(settings, 'PIPELINE_CSS', {}).get(package_name, {}),
         }[package_type]
 
         if package:
-            package = {package_name: package}
+            return {package_name: package}
+
+    def _compressed_override_name(self, name):
+       return '{prefix}_{name}'.format(
+           prefix=getattr(settings, 'PIPELINE_SETTINGS_PREFIX',''),
+           name=name
+       )
+
+    def package_for(self, package_name, package_type):
+        package = self.get_package_or_none(self._compressed_override_name(package_name), package_type)
+
+        if not package:
+            package = self.get_package_or_none(package_name, package_type)
+        else:
+            package_name = self._compressed_override_name(package_name)
 
         packager = {
             'js': Packager(css_packages={}, js_packages=package),
@@ -53,11 +68,15 @@ class CompressedCSSNode(CompressedMixin, template.Node):
 
     def render(self, context):
         package_name = template.Variable(self.name).resolve(context)
+
         try:
             package = self.package_for(package_name, 'css')
-            self.gzip = self.gzip_allowed(context['request'].META.get('HTTP_ACCEPT_ENCODING', ''))
         except PackageNotFound:
             return ''  # fail silently, do not return anything if an invalid group is specified
+
+        if context.get('request', False):
+            self.gzip = self.gzip_allowed(context['request'].META.get('HTTP_ACCEPT_ENCODING', ''))
+
         return self.render_compressed(package, 'css')
 
     def render_css(self, package, path):
@@ -85,11 +104,15 @@ class CompressedJSNode(CompressedMixin, template.Node):
 
     def render(self, context):
         package_name = template.Variable(self.name).resolve(context)
+
         try:
             package = self.package_for(package_name, 'js')
-            self.gzip = self.gzip_allowed(context['request'].META.get('HTTP_ACCEPT_ENCODING', ''))
         except PackageNotFound:
             return ''  # fail silently, do not return anything if an invalid group is specified
+        
+        if context.get('request', False):
+            self.gzip = self.gzip_allowed(context['request'].META.get('HTTP_ACCEPT_ENCODING', ''))
+
         return self.render_compressed(package, 'js')
 
     def render_js(self, package, path):
