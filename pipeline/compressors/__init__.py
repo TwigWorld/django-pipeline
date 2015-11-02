@@ -14,7 +14,7 @@ from pipeline.storage import default_storage
 from pipeline.utils import to_class, relpath
 from pipeline.exceptions import CompressorError
 
-URL_DETECTOR = r"""url\(['"]{0,1}\s*(.*?)["']{0,1}\)"""
+URL_DETECTOR = r"""url\(['"]{0,1}\s*(.*?)["']{0,1}\)[^']"""
 URL_REPLACER = r"""url\(__EMBED__(.+?)(\?\d+)?\)"""
 NON_REWRITABLE_URL = re.compile(r'^(http:|https:|data:|//)')
 
@@ -127,7 +127,10 @@ class Compressor(object):
             def reconstruct(match):
                 asset_path = match.group(1)
                 if NON_REWRITABLE_URL.match(asset_path):
-                    return "url(%s)" % asset_path
+                    if asset_path.startswith('data:image/svg+xml'):
+                        return 'url("%s")' % asset_path
+                    else:
+                        return "url(%s)" % asset_path
                 asset_url = self.construct_asset_path(asset_path, path,
                                                       output_filename, variant)
                 return "url(%s)" % asset_url
