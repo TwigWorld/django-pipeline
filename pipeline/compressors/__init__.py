@@ -127,10 +127,10 @@ class Compressor(object):
             def reconstruct(match):
                 asset_path = match.group(1)
                 if NON_REWRITABLE_URL.match(asset_path):
-                    return "url(%s)" % asset_path
+                    return 'url("%s")' % asset_path
                 asset_url = self.construct_asset_path(asset_path, path,
                                                       output_filename, variant)
-                return "url(%s)" % asset_url
+                return 'url("%s")' % asset_url
             content = self.read_text(path)
             # content needs to be unicode to avoid explosions with non-ascii chars
             content = re.sub(URL_DETECTOR, reconstruct, content)
