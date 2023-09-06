@@ -8,6 +8,7 @@ import subprocess
 
 from itertools import takewhile
 
+from django.contrib.staticfiles import finders
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.utils.encoding import smart_bytes, force_text
 try:
@@ -216,7 +217,12 @@ class Compressor(object):
 
     def read_bytes(self, path):
         """Read file content in binary mode"""
-        file = staticfiles_storage.open(path)
+        finder_path = finders.find(path)
+        if finder_path is not None:
+            file = open(finder_path)
+        else:
+            raise Exception("File '%s' not found via "
+                            "static files finders", path)
         content = file.read()
         file.close()
         return content
